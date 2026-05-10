@@ -32,14 +32,13 @@ Object Pool реалізовано для коробок. На старті гр
 - Додано сцену MainMenu з кнопками Start/Exit.
 
 ## 5. Скріншоти або відео
-
-- Скріншот сцени Unity з доданими асетами (BoxPool, SpawnPoints, DeliveryZones).
-- Скріншот гри у Play Mode з активними UI (score, timer, task).
-- Скріншот/відео роботи Object Pool (поява/повернення коробок у пул).
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
 
 ## 6. Посилання на коміти або репозиторій
 
-GitHub: ______________________________
+GitHub: [гіт](https://github.com/nasedry/game1.git)
 
 ## 7. Висновок
 
