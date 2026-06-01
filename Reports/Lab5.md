@@ -103,7 +103,6 @@ MainMenu → GameScene (Level 1) --перемога--> GameScene2 (Level 2) --п
 - Додано `LevelConfig.cs` — ScriptableObject для конфігурації рівнів.
 - Створено `Level1Config.asset` та `Level2Config.asset` з різними параметрами.
 - Додано `PauseManager.cs` — пауза через `Esc`, кнопки продовжити / перезапустити / меню.
-- Додано `UIAnimator.cs` — анімація scale + alpha для панелей UI через `Time.unscaledDeltaTime`.
 - Оновлено `PlayerMovement.cs`: метод `SetSpeed(float)` для зміни швидкості з конфігу.
 - Оновлено `MainMenuController.cs`: кнопки Рівень 1, Рівень 2, Вийти.
 - Додано панель паузи `PausePanel` в `GameScene` та `GameScene2` з кнопками.
@@ -118,12 +117,10 @@ MainMenu → GameScene (Level 1) --перемога--> GameScene2 (Level 2) --п
 
 > *(Додати скріншоти після запуску в Unity)*
 
-- [ ] Скріншот GameScene (Рівень 1) з активним HUD
-- [ ] Скріншот вікна паузи
-- [ ] Скріншот екрану перемоги з кнопкою «Наступний рівень»
-- [ ] Скріншот екрану поразки
-- [ ] Скріншот головного меню з кнопками Рівень 1 / Рівень 2
-- [ ] Скріншот GameScene2 (Рівень 2)
+- ![alt text](image-2.png)
+- ![alt text](image-1.png)
+- ![alt text](image-3.png)
+- ![alt text](image.png)
 
 ---
 
