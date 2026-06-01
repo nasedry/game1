@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Налаштування руху")]
-    public float moveSpeed = 5f;
+    [SerializeField] private float moveSpeed = 5f;
     
     [Header("Налаштування спрайту")]
     // ПОСИЛАННЯ: Перетягни сюди дочірній об'єкт, який містить твій SpriteRenderer
