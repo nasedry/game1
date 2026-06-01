@@ -87,4 +87,10 @@ public class PlayerMovement : MonoBehaviour
             }
         }
     }
+
+    /// <summary>Встановлює швидкість руху (використовується з LevelConfig).</summary>
+    public void SetSpeed(float speed)
+    {
+        moveSpeed = speed;
+    }
 }

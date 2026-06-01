@@ -1,121 +1,135 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro; // Обов'язково для роботи з текстом
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    // Робимо цей скрипт "Одинаком" (Singleton), щоб інші скрипти могли легко до нього звертатися
-    public static GameManager Instance; 
+    public static GameManager Instance;
 
-    [Header("UI")]
-    public TextMeshProUGUI scoreText; // Посилання на наш текстовий об'єкт
-    public TextMeshProUGUI timerText; // Текст таймера
-    public TextMeshProUGUI taskText; // Поточне завдання
+    // ── Конфігурація рівня ──────────────────────────────────────────────────
+    [Header("Конфігурація рівня (ScriptableObject)")]
+    public LevelConfig config;
 
-    [Header("Results UI")]
+    // ── HUD ──────────────────────────────────────────────────────────────────
+    [Header("HUD")]
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI timerText;
+    public TextMeshProUGUI taskText;
+    public TextMeshProUGUI levelNumberText;
+
+    // ── Екран результатів ─────────────────────────────────────────────────────
+    [Header("Екран результатів")]
     public GameObject resultsPanel;
     public TextMeshProUGUI resultsTitleText;
     public TextMeshProUGUI resultsScoreText;
-    public TextMeshProUGUI resultsRatingText;
+    // public TextMeshProUGUI resultsRatingText;
+    public StarRatingUI starRatingUI;          // PNG-зірки
     public TextMeshProUGUI resultsStatsText;
+    public GameObject nextLevelButton;
 
-    [Header("Timer")]
-    public float levelTimeSeconds = 30f;
+    // ── Параметри (fallback без Config) ──────────────────────────────────────
+    [Header("Параметри (fallback без Config)")]
+    public float levelTimeSeconds = 60f;
+    public int deliveriesToWin = 10;
+    public int oneStarScore = 4;
+    public int twoStarScore = 7;
+    public int threeStarScore = 10;
+    public string mainMenuSceneName = "MainMenu";
+    public string nextLevelSceneName = "";
 
-    [Header("Rating")]
-    public int oneStarScore = 3;
-    public int twoStarScore = 6;
-    public int threeStarScore = 9;
-
-    [Header("Scenes")]
-    public string mainMenuSceneName = "";
-
-    private int score = 0; // Наш лічильник очок
-    private int correctDeliveries = 0;
-    private int incorrectDeliveries = 0;
+    // ── Стан ─────────────────────────────────────────────────────────────────
+    private int score;
+    private int correctDeliveries;
+    private int incorrectDeliveries;
     private float timeRemaining;
-    private bool timeUp;
+    private bool gameOver;
+    private bool isWin;
     private bool resultsShown;
 
-    public bool IsTimeUp => timeUp;
+    // ── Публічні властивості ─────────────────────────────────────────────────
+    public bool IsGameOver => gameOver;
+    public bool IsTimeUp => gameOver && !isWin;
+    public LevelConfig Config => config;
+
+    // ═════════════════════════════════════════════════════════════════════════
 
     void Awake()
     {
-        // Налаштування Singleton
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else if (Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance == null) Instance = this;
+        else if (Instance != this) { Destroy(gameObject); return; }
     }
 
     void Start()
     {
-        timeRemaining = levelTimeSeconds;
-        UpdateTimerUi();
-        UpdateScoreUi();
+        ApplyConfig();
 
-        if (resultsPanel != null)
-        {
-            resultsPanel.SetActive(false);
-        }
+        timeRemaining = levelTimeSeconds;
+        UpdateTimerUI();
+        UpdateScoreUI();
+        UpdateLevelNumberUI();
+
+        if (resultsPanel != null) resultsPanel.SetActive(false);
+        if (nextLevelButton != null) nextLevelButton.SetActive(false);
     }
+
+    void ApplyConfig()
+    {
+        if (config == null) return;
+
+        levelTimeSeconds   = config.levelTimeSeconds;
+        deliveriesToWin    = config.deliveriesToWin;
+        oneStarScore       = config.oneStarScore;
+        twoStarScore       = config.twoStarScore;
+        threeStarScore     = config.threeStarScore;
+        mainMenuSceneName  = config.mainMenuSceneName;
+        nextLevelSceneName = config.nextLevelSceneName;
+
+        PlayerMovement player = FindFirstObjectByType<PlayerMovement>();
+        if (player != null) player.SetSpeed(config.playerSpeed);
+    }
+
+    // ── Update ────────────────────────────────────────────────────────────────
 
     void Update()
     {
-        if (timeUp)
-        {
-            return;
-        }
+        if (gameOver) return;
 
         timeRemaining -= Time.deltaTime;
-        UpdateTimerUi();
+        UpdateTimerUI();
+
         if (timeRemaining <= 0f)
         {
-            timeUp = true;
-            Time.timeScale = 0f;
-            Debug.Log("Час вийшов!");
-            UpdateTimerUi();
-            ShowResultsScreen();
+            timeRemaining = 0f;
+            EndGame(false);
         }
     }
 
-    // Цей метод будуть викликати інші скрипти, коли треба додати очко
+    // ── Публічні методи для інших скриптів ───────────────────────────────────
+
     public void AddScore()
     {
-        if (timeUp)
-        {
-            return;
-        }
+        if (gameOver) return;
+        score++;
+        correctDeliveries++;
+        UpdateScoreUI();
 
-        score += 1;
-        correctDeliveries += 1;
-        UpdateScoreUi();
+        if (deliveriesToWin > 0 && score >= deliveriesToWin)
+            EndGame(true);
     }
 
     public void AddIncorrectDelivery()
     {
-        if (timeUp)
-        {
-            return;
-        }
-
-        incorrectDeliveries += 1;
+        if (gameOver) return;
+        incorrectDeliveries++;
     }
 
     public void SetCurrentTask(BoxColorType color)
     {
-        if (taskText == null)
-        {
-            return;
-        }
-
+        if (taskText == null) return;
         taskText.text = "Доставте " + ToUkrColorName(color) + " коробку";
     }
+
+    // ── Навігація ─────────────────────────────────────────────────────────────
 
     public void RestartLevel()
     {
@@ -123,111 +137,94 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
+    public void NextLevel()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(!string.IsNullOrWhiteSpace(nextLevelSceneName)
+            ? nextLevelSceneName
+            : mainMenuSceneName);
+    }
+
     public void MainMenu()
     {
         Time.timeScale = 1f;
-        if (!string.IsNullOrWhiteSpace(mainMenuSceneName))
-        {
-            SceneManager.LoadScene(mainMenuSceneName);
-        }
-        else
-        {
-            Debug.LogWarning("Main menu scene name is not set.");
-        }
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 
-    void UpdateTimerUi()
-    {
-        if (timerText == null)
-        {
-            return;
-        }
+    // ── Внутрішні методи ──────────────────────────────────────────────────────
 
-        float clamped = Mathf.Max(0f, timeRemaining);
-        int totalSeconds = Mathf.CeilToInt(clamped);
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        timerText.text = "Час: " + minutes.ToString("00") + ":" + seconds.ToString("00");
+    void EndGame(bool win)
+    {
+        if (gameOver) return;
+        gameOver = true;
+        isWin = win;
+        Time.timeScale = 0f;
+        ShowResultsScreen(win);
     }
 
-    void UpdateScoreUi()
+    void ShowResultsScreen(bool win)
     {
-        if (scoreText == null)
-        {
-            return;
-        }
-
-        scoreText.text = "Доставлено: " + score;
-    }
-
-    void ShowResultsScreen()
-    {
-        if (resultsShown)
-        {
-            return;
-        }
-
+        if (resultsShown) return;
         resultsShown = true;
-        Debug.Log("ShowResultsScreen: called");
 
-        if (resultsPanel == null)
-        {
-            Debug.LogWarning("ShowResultsScreen: resultsPanel is not assigned.");
-        }
-
-        if (resultsPanel != null)
-        {
-            resultsPanel.SetActive(true);
-            Debug.Log("ShowResultsScreen: resultsPanel activated.");
-        }
+        if (resultsPanel != null) resultsPanel.SetActive(true);
 
         if (resultsTitleText != null)
-        {
-            resultsTitleText.text = "Час вичерпано!";
-        }
+            resultsTitleText.text = win ? "Перемога!" : "Час вичерпано!";
 
         if (resultsScoreText != null)
-        {
             resultsScoreText.text = "Рахунок: " + score;
-        }
 
-        if (resultsRatingText != null)
-        {
-            int stars = GetStarCount(score);
-            resultsRatingText.text = "Зiрки: " + new string('*', stars);
-        }
+        int stars = GetStarCount(score);
+
+        // if (resultsRatingText != null)
+        //     resultsRatingText.text = new string('★', stars) + new string('☆', 3 - stars);
+
+        if (starRatingUI != null)
+            starRatingUI.SetStars(stars);
 
         if (resultsStatsText != null)
-        {
             resultsStatsText.text = "Правильно: " + correctDeliveries + " | Неправильно: " + incorrectDeliveries;
-        }
+
+        if (nextLevelButton != null)
+            nextLevelButton.SetActive(win && !string.IsNullOrWhiteSpace(nextLevelSceneName));
     }
 
-    int GetStarCount(int totalScore)
+    void UpdateTimerUI()
     {
-        if (totalScore >= threeStarScore)
-        {
-            return 3;
-        }
+        if (timerText == null) return;
+        float clamped = Mathf.Max(0f, timeRemaining);
+        int total = Mathf.CeilToInt(clamped);
+        timerText.text = "Час: " + (total / 60).ToString("00") + ":" + (total % 60).ToString("00");
+    }
 
-        if (totalScore >= twoStarScore)
-        {
-            return 2;
-        }
+    void UpdateScoreUI()
+    {
+        if (scoreText == null) return;
+        string target = deliveriesToWin > 0 ? "/" + deliveriesToWin : "";
+        scoreText.text = "Доставлено: " + score + target;
+    }
 
-        return totalScore >= oneStarScore ? 1 : 0;
+    void UpdateLevelNumberUI()
+    {
+        if (levelNumberText == null || config == null) return;
+        levelNumberText.text = "Рівень " + config.levelNumber;
+    }
+
+    int GetStarCount(int s)
+    {
+        if (s >= threeStarScore) return 3;
+        if (s >= twoStarScore) return 2;
+        return s >= oneStarScore ? 1 : 0;
     }
 
     string ToUkrColorName(BoxColorType color)
     {
         switch (color)
         {
-            case BoxColorType.Red:
-                return "ЧЕРВОНУ";
-            case BoxColorType.Blue:
-                return "СИНЮ";
-            default:
-                return "ЗЕЛЕНУ";
+            case BoxColorType.Red:  return "ЧЕРВОНУ";
+            case BoxColorType.Blue: return "СИНЮ";
+            default:                return "ЗЕЛЕНУ";
         }
     }
 }
