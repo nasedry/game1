@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Налаштування руху")]
-    public float moveSpeed = 5f;
+    [SerializeField] private float moveSpeed = 5f;
     
     [Header("Налаштування спрайту")]
     // ПОСИЛАННЯ: Перетягни сюди дочірній об'єкт, який містить твій SpriteRenderer
@@ -86,5 +86,11 @@ public class PlayerMovement : MonoBehaviour
                 characterSpriteTransform.localEulerAngles = new Vector3(0, 0, targetAngle);
             }
         }
+    }
+
+    /// <summary>Встановлює швидкість руху (використовується з LevelConfig).</summary>
+    public void SetSpeed(float speed)
+    {
+        moveSpeed = speed;
     }
 }
