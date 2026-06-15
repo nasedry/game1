@@ -36,4 +36,22 @@ public class MainMenuController : MonoBehaviour
         Application.Quit();
         Debug.Log("ExitGame called.");
     }
+
+    /// <summary>Відкрити панель налаштувань (зв'язати з кнопкою Settings).</summary>
+    public void OpenSettings()
+    {
+        if (GameManager.Instance != null)
+            GameManager.Instance.OpenSettings();
+        else
+            Debug.LogWarning("OpenSettings: GameManager.Instance is null.");
+    }
+
+    /// <summary>Закрити панель налаштувань (зв'язати з кнопку Close у панелі).</summary>
+    public void CloseSettings()
+    {
+        if (GameManager.Instance != null)
+            GameManager.Instance.CloseSettings();
+        else
+            Debug.LogWarning("CloseSettings: GameManager.Instance is null.");
+    }
 }

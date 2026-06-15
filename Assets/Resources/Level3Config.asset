@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a57d7e064b1cc74dba131d369082ea9, type: 3}
+  m_Name: Level3Config
+  m_EditorClassIdentifier: 
+  levelName: "\u0420\u0456\u0432\u0435\u043D\u044C 3"
+  levelNumber: 3
+  playerSpeed: 10
+  levelTimeSeconds: 150
+  deliveriesToWin: 27
+  oneStarScore: 11
+  twoStarScore: 20
+  threeStarScore: 27
+  nextLevelSceneName: 
+  mainMenuSceneName: MainMenu

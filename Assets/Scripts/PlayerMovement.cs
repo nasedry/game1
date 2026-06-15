@@ -1,17 +1,28 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(AudioSource))]
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Налаштування руху")]
     [SerializeField] private float moveSpeed = 5f;
     
+    [Header("Audio")]
+    [Tooltip("Якщо маєш кілька варіантів кроків, помісти їх сюди")]
+    public AudioClip[] footstepClips;
+    [Tooltip("Один файл зі звуком кроків (наприклад 'footsteps'). Використовується пріоритетно.")]
+    public AudioClip footsteps;
+    public AudioClip footstepClip;
+    [Tooltip("Базовий інтервал між кроками для стандартної швидкості (5).")]
+    public float baseStepInterval = 0.48f;
     [Header("Налаштування спрайту")]
     // ПОСИЛАННЯ: Перетягни сюди дочірній об'єкт, який містить твій SpriteRenderer
     public Transform characterSpriteTransform; 
     
     private Rigidbody2D rb;
     private Vector2 movement;
+    private AudioSource footstepSource;
+    private float stepTimer = 0f;
 
     void Start()
     {
@@ -37,6 +48,12 @@ public class PlayerMovement : MonoBehaviour
                 Debug.LogError("PlayerMovement: characterSpriteTransform пусте і немає дочірніх об'єктів для обертання.");
             }
         }
+        // Audio setup
+        footstepSource = GetComponent<AudioSource>();
+        if (footstepSource == null) footstepSource = gameObject.AddComponent<AudioSource>();
+        footstepSource.playOnAwake = false;
+        footstepSource.loop = false;
+        footstepSource.spatialBlend = 0f; // 2D sound
     }
 
     void Update()
@@ -47,6 +64,22 @@ public class PlayerMovement : MonoBehaviour
 
         // Нормалізація, щоб діагональ не була швидшою
         movement = movement.normalized;
+        
+        // Footstep timing
+        if (movement != Vector2.zero)
+        {
+            stepTimer -= Time.deltaTime;
+            if (stepTimer <= 0f)
+            {
+                PlayFootstep();
+                float speedFactor = Mathf.Max(0.01f, moveSpeed) / 5f; // 1 at default speed
+                stepTimer = baseStepInterval / speedFactor;
+            }
+        }
+        else
+        {
+            stepTimer = 0f;
+        }
     }
 
     void FixedUpdate()
@@ -92,5 +125,24 @@ public class PlayerMovement : MonoBehaviour
     public void SetSpeed(float speed)
     {
         moveSpeed = speed;
+    }
+
+    private void PlayFootstep()
+    {
+        if (footstepSource == null) return;
+
+        if (footsteps != null)
+        {
+            footstepSource.PlayOneShot(footsteps);
+        }
+        else if (footstepClips != null && footstepClips.Length > 0)
+        {
+            var clip = footstepClips[Random.Range(0, footstepClips.Length)];
+            footstepSource.PlayOneShot(clip);
+        }
+        else if (footstepClip != null)
+        {
+            footstepSource.PlayOneShot(footstepClip);
+        }
     }
 }

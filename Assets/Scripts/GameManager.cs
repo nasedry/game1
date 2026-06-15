@@ -27,6 +27,10 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI resultsStatsText;
     public GameObject nextLevelButton;
 
+    [Header("UI Panels")]
+    public GameObject settingsPanel;
+    public ScreenBlur screenBlur;
+
     // ── Параметри (fallback без Config) ──────────────────────────────────────
     [Header("Параметри (fallback без Config)")]
     public float levelTimeSeconds = 60f;
@@ -70,9 +74,10 @@ public class GameManager : MonoBehaviour
 
         if (resultsPanel != null) resultsPanel.SetActive(false);
         if (nextLevelButton != null) nextLevelButton.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
     }
 
-    void ApplyConfig()
+    public void ApplyConfig()
     {
         if (config == null) return;
 
@@ -85,7 +90,11 @@ public class GameManager : MonoBehaviour
         nextLevelSceneName = config.nextLevelSceneName;
 
         PlayerMovement player = FindFirstObjectByType<PlayerMovement>();
-        if (player != null) player.SetSpeed(config.playerSpeed);
+        if (player != null)
+        {
+            float skinMultiplier = PlayerPrefs.GetFloat("selected_skin_multiplier", 1f);
+            player.SetSpeed(config.playerSpeed * skinMultiplier);
+        }
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
@@ -126,7 +135,7 @@ public class GameManager : MonoBehaviour
     public void SetCurrentTask(BoxColorType color)
     {
         if (taskText == null) return;
-        taskText.text = "Доставте " + ToUkrColorName(color) + " коробку";
+        taskText.text = "Deliver  " + ToUkrColorName(color)+ " box";
     }
 
     // ── Навігація ─────────────────────────────────────────────────────────────
@@ -151,6 +160,19 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
+    // ── Settings panel ─────────────────────────────────────────────────────
+    public void OpenSettings()
+    {
+        if (settingsPanel != null) settingsPanel.SetActive(true);
+        if (screenBlur != null) screenBlur.CaptureAndBlur();
+    }
+
+    public void CloseSettings()
+    {
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (screenBlur != null) screenBlur.ClearBlur();
+    }
+
     // ── Внутрішні методи ──────────────────────────────────────────────────────
 
     void EndGame(bool win)
@@ -170,10 +192,10 @@ public class GameManager : MonoBehaviour
         if (resultsPanel != null) resultsPanel.SetActive(true);
 
         if (resultsTitleText != null)
-            resultsTitleText.text = win ? "Перемога!" : "Час вичерпано!";
+            resultsTitleText.text = win ? "Victory!" : "Time's up!";
 
         if (resultsScoreText != null)
-            resultsScoreText.text = "Рахунок: " + score;
+            resultsScoreText.text = "Score: " + score;
 
         int stars = GetStarCount(score);
 
@@ -184,7 +206,7 @@ public class GameManager : MonoBehaviour
             starRatingUI.SetStars(stars);
 
         if (resultsStatsText != null)
-            resultsStatsText.text = "Правильно: " + correctDeliveries + " | Неправильно: " + incorrectDeliveries;
+            resultsStatsText.text = "Correct: " + correctDeliveries + " | Incorrect: " + incorrectDeliveries;
 
         if (nextLevelButton != null)
             nextLevelButton.SetActive(win && !string.IsNullOrWhiteSpace(nextLevelSceneName));
@@ -195,20 +217,20 @@ public class GameManager : MonoBehaviour
         if (timerText == null) return;
         float clamped = Mathf.Max(0f, timeRemaining);
         int total = Mathf.CeilToInt(clamped);
-        timerText.text = "Час: " + (total / 60).ToString("00") + ":" + (total % 60).ToString("00");
+        timerText.text = "Time: " + (total / 60).ToString("00") + ":" + (total % 60).ToString("00");
     }
 
     void UpdateScoreUI()
     {
         if (scoreText == null) return;
         string target = deliveriesToWin > 0 ? "/" + deliveriesToWin : "";
-        scoreText.text = "Доставлено: " + score + target;
+        scoreText.text = "Delivered: " + score + target;
     }
 
     void UpdateLevelNumberUI()
     {
         if (levelNumberText == null || config == null) return;
-        levelNumberText.text = "Рівень " + config.levelNumber;
+        levelNumberText.text = "LEVEL " + config.levelNumber;
     }
 
     int GetStarCount(int s)
@@ -222,9 +244,9 @@ public class GameManager : MonoBehaviour
     {
         switch (color)
         {
-            case BoxColorType.Red:  return "ЧЕРВОНУ";
-            case BoxColorType.Blue: return "СИНЮ";
-            default:                return "ЗЕЛЕНУ";
+            case BoxColorType.Red:  return "RED";
+            case BoxColorType.Blue: return "BLUE";
+            default:                return "GREEN";
         }
     }
 }

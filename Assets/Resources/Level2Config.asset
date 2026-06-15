@@ -20,5 +20,5 @@ MonoBehaviour:
   oneStarScore: 6
   twoStarScore: 10
   threeStarScore: 15
-  nextLevelSceneName: 
+  nextLevelSceneName: GameScene3
   mainMenuSceneName: MainMenu

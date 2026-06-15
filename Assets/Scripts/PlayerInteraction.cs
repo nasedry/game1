@@ -7,6 +7,11 @@ public class PlayerInteraction : MonoBehaviour
     public Transform holdPosition;   // Точка, куди кріпиться коробка (наш пустий об'єкт)
 
     private GameObject heldBox = null; // Посилання на коробку, яку ми зараз тримаємо
+    
+    [Header("Audio")]
+    public AudioClip pickupClip;
+    public AudioClip dropClip;
+    private AudioSource audioSource;
 
     void Update()
     {
@@ -22,6 +27,14 @@ public class PlayerInteraction : MonoBehaviour
                 DropBox();      // Якщо вже щось тримаємо - кидаємо
             }
         }
+    }
+
+    void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 0f; // 2D sound
     }
 
     void TryPickupBox()
@@ -48,6 +61,9 @@ public class PlayerInteraction : MonoBehaviour
                     boxRb.linearVelocity = Vector2.zero; 
                 }
 
+                if (audioSource != null && pickupClip != null)
+                    audioSource.PlayOneShot(pickupClip);
+
                 break;
             }
         }
@@ -71,6 +87,9 @@ public class PlayerInteraction : MonoBehaviour
             boxRb.linearVelocity = Vector2.zero;
             boxRb.angularVelocity = 0f;
         }
+
+        if (audioSource != null && dropClip != null)
+            audioSource.PlayOneShot(dropClip);
 
         heldBox = null;
     }
